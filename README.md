@@ -80,6 +80,15 @@ Then test:
 fprintd-verify
 ```
 
+### A GUI that guides this properly
+
+Doing those eight presses correctly matters more than it sounds, and
+`fprintd-enroll` gives you no help with it. **Fingerprint Setup**
+(https://github.com/tsteppy/fingerprint-setup) prompts each press by position,
+then runs ten verifications and tells you how well your enrolment actually
+performs before you rely on it. It works with any fprintd-supported reader,
+not just this one.
+
 ## Fingerprint login
 
 Once verification works:
