@@ -24,7 +24,7 @@
  *   enhance   = box1 then box4 high-pass (+128), edge-replicated windows
  *   mask      = per-16px-block structure-tensor coherence >= 0.20,
  *               3x3 majority vote (wraparound, matching np.roll)
- *   score     = NCC over the coherent-overlap region, +/-6 px translation
+ *   score     = NCC over the coherent-overlap region, +/-19 px translation
  *               search, >= 800 px overlap required
  *   coverage  = coherent fraction of the frame (capture quality gate)
  *
@@ -44,7 +44,11 @@
 #define EM_COH_TH 0.20
 #endif
 #ifndef EM_SRCH
-#define EM_SRCH 6
+/* Translation search half-width. Measured on a 714-frame / 60-press dataset
+ * (see the pull request): 6 costs about a third of genuine presses, because two
+ * presses of the same finger routinely land further apart than that. 19 is the
+ * last value before impostors start crossing the 0.53 threshold on that data. */
+#define EM_SRCH 19
 #endif
 #ifndef EM_MIN_OVERLAP
 #define EM_MIN_OVERLAP 800
