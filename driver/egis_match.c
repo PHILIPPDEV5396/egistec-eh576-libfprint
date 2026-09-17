@@ -40,9 +40,15 @@
 #define EM_BLOCK 16
 #define EM_BH (EM_H / EM_BLOCK) /* 3 */
 #define EM_BW (EM_W / EM_BLOCK) /* 4 */
+#ifndef EM_COH_TH
 #define EM_COH_TH 0.20
+#endif
+#ifndef EM_SRCH
 #define EM_SRCH 6
+#endif
+#ifndef EM_MIN_OVERLAP
 #define EM_MIN_OVERLAP 800
+#endif
 
 /* Box mean with edge replication (scipy uniform_filter mode='nearest'):
  * window indices clamp to the frame, denominator is the full window area. */
