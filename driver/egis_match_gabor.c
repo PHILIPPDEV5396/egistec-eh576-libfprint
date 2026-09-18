@@ -56,15 +56,37 @@
  *   this file                   0.813         0.773           0.0 %
  *
  * and on per-boot flat-fielded frames (what my own driver feeds): 0.812 /
- * 0.690, i.e. the fixed-pattern noise the flat-field removes is what lifts
- * the impostor ceiling on raw frames, so a flat-field would widen the gap
- * 3x -- that is a separate change to the capture path, not to this file.
- * Cross-fold: a threshold placed mid-gap on one fold and applied to the
- * other gives 0 / 30 false rejects and 0 / 240 false accepts both ways; the
- * two folds put that threshold at 0.793 and 0.803 on raw frames, which is
- * where em_match_threshold below comes from. All of this is in-sample for
- * the angle step and mask parameters, which were chosen on the same data;
- * a run on your unit is worth more than any of it.
+ * 0.690. Cross-fold: a threshold placed mid-gap on one fold and applied to
+ * the other gives 0 / 30 false rejects and 0 / 240 false accepts both ways;
+ * the two folds put that threshold at 0.793 and 0.803 on raw frames, which
+ * is where em_match_threshold below comes from. All of this is in-sample
+ * for the angle step and mask parameters, which were chosen on the same
+ * data.
+ *
+ * SECOND UNIT (Thaddeus Stepanovich, Yoga 7 16IRL8, 29 genuine / 88
+ * impostor decisions, cross-fold, docs/gabor-frontend-second-unit.md):
+ * egis_match.c as shipped 51.7 % FRR / 4.5 % FAR; this file on raw frames
+ * 17.2 % / 1.1 %; this file on flat-fielded frames 6.9 % / 1.1 %, one of the
+ * two folds at 0 / 0. The 0 % / 0 % above did not reproduce there (genuine
+ * min 0.600 against impostor max 0.815, flat-fielded), so the honest summary
+ * across two units is "a large improvement", not "a clean gap".
+ *
+ * THE FLAT-FIELD IS HALF OF IT, AND IT IS NOT A FREE-STANDING NICETY. The
+ * sensor's fixed-pattern noise is per-sensel and per-unit, and it is what
+ * sets the impostor ceiling on raw frames: on his unit the raw-frame
+ * threshold wants ~0.85 where mine wants 0.80 (at 0.80 it false-accepts
+ * 3 of his 88 impostors), while flat-fielded his two folds agree to within
+ * 0.001. Two things to know before adding one to the capture path:
+ *   - it must be SUBTRACTIVE: corrected = raw - baseline + mean(baseline),
+ *     baseline = the mean of a few no-finger frames at the same gain,
+ *     taken per boot. A multiplicative correction (raw * mean / baseline)
+ *     clips and destroys frames (some no longer reach the 800 px overlap);
+ *   - it helps THIS front-end and hurts egis_match.c (51.7 % -> 65.5 % on
+ *     his unit), because its +128 high-pass has no local normalisation to
+ *     absorb the changed contrast. Do not judge the flat-field by its
+ *     effect on the old front-end.
+ * The threshold it lands on is still unit-dependent at this sample size
+ * (0.75 on my flat-fielded unit, 0.81 on his); a third unit decides.
  *
  * COST (synthetic frames, idle laptop, gcc -O3): em_frame_compute 1.6 ms
  * (egis_match.c: 0.17 ms), em_match 4.0 ms (0.85 ms at +-6, 6.4 ms at +-19).
@@ -83,9 +105,12 @@
 #include "egis_match.h"
 
 /* Operating point of THIS front-end (see egis_match.h): the mid-gap
- * threshold of the raw-frame measurement above, and a coverage gate placed
- * where the per-pixel mask separates well-placed frames (0.70-0.75) from
- * empty or smeared ones (< 0.2). */
+ * threshold of the RAW-FRAME measurement above -- this driver does not
+ * flat-field. It is a one-unit value: the second unit wanted 0.85 on raw
+ * frames and 0.81 flat-fielded (see the header). If a flat-field lands in
+ * the capture path, re-measure and move this with it. The coverage gate is
+ * placed where the per-pixel mask separates well-placed frames (0.70-0.75)
+ * from empty or smeared ones (< 0.2). */
 const double em_match_threshold = 0.80;
 const double em_min_coverage = 0.35;
 
