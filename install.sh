@@ -85,6 +85,7 @@ cp "$SRC_DIR"/driver/egis0576.c "$SRC_DIR"/driver/egis0576.h \
 case "${EGIS0576_FRONTEND:-default}" in
   default) cp "$SRC_DIR"/driver/egis_match.c "$LIBFPRINT_DIR/libfprint/drivers/egis_match.c" ;;
   gabor)   cp "$SRC_DIR"/driver/egis_match_gabor.c "$LIBFPRINT_DIR/libfprint/drivers/egis_match.c"
+           cp "$SRC_DIR"/driver/egis_match_check.h "$LIBFPRINT_DIR/libfprint/drivers/"
            green "front-end: egis_match_gabor.c" ;;
   *)       die "EGIS0576_FRONTEND must be 'default' or 'gabor'" ;;
 esac
