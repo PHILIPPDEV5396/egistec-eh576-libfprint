@@ -113,10 +113,21 @@
  *     minutiae-based matcher would reject a featureless grating.
  *     PARTLY CLOSED by the local-ridge-period consistency check at the end
  *     of this file (egis_match_check.h): the probe's ridge period must vary
- *     over the overlap and agree with the template's. Every blind family
- *     of the review now scores below the threshold (sine 0.70, arc 0.70,
- *     loop/delta 0.75, ridge noise 0.70) at a measured genuine cost of
- *     0 of 60 presses (genuine min 0.812 -> 0.804, impostor max unchanged,
+ *     over the overlap and agree with the template's. RE-MEASURED over
+ *     WIDENED parameter grids (an earlier version of this paragraph said
+ *     "every blind family now scores below the threshold", which was true
+ *     only of the grids the review itself had run), against 30 real
+ *     enrolment templates, best score reachable with the check passing:
+ *
+ *         sine 0.865 -> 0.700   arc 0.909 -> 0.699   chirp 0.784 -> 0.768
+ *         noise 0.875 -> 0.795  loop 0.907 -> 0.892  jitter 0.914 -> 0.895
+ *
+ *     So it closes the families whose period is CONSTANT -- which is what
+ *     the 6144-grating families are, and they die 0 of 302 -- and it does
+ *     NOT close a period-MODULATED grating, a loop/delta pattern or
+ *     filtered ridge noise. Modulating the period costs an attacker two
+ *     extra sine terms and needs no score oracle. Genuine cost: 0 of 60
+ *     presses (genuine min 0.812 -> 0.804, impostor max unchanged,
  *     cross-fold still 0 / 0). The first version of the rule also demanded
  *     that the probe's period VARY, and that threw away a genuine pair at
  *     NCC 0.97 on the second reference session (flat region of a real
@@ -862,13 +873,6 @@ eg_match_core (const EmFrame *a, const EmFrame *b, int *odx, int *ody, int *orot
  * report (~2 ms on top of em_match's 4 ms).
  */
 
-#ifndef EM_FQ_K0
-#define EM_FQ_K0 3.5      /* lag range of the block autocorrelation */
-#endif
-#ifndef EM_FQ_K1
-#define EM_FQ_K1 9.5
-#endif
-#define EM_FQ_NK ((int) ((EM_FQ_K1 - EM_FQ_K0) / 0.5 + 1.5))   /* 12 */
 #ifndef EM_FQ_HARM
 #define EM_FQ_HARM 0.6
 #endif
@@ -1020,11 +1024,16 @@ em_period_map (const double *img, const uint8_t *mask, double *pmap, double *con
   return nvalid;
 }
 
-double
-em_match_ex (const EmFrame *a, const EmFrame *b, EmMatchInfo *info)
+/* The period evaluation at an alignment the caller already has. Split out of
+ * em_match_ex so that em_match, which needs the score before it knows whether
+ * the evaluation is wanted at all, does not run the deterministic search a
+ * second time to get the same alignment back: measured 11.18 ms a pair
+ * against 6.20 ms, a 45 % saving on exactly the comparisons that can be
+ * accepted. Identical results, verified on 32400 pairs of real frames. */
+static double
+eg_fq_eval (const EmFrame *a, const EmFrame *b, double s, int dx, int dy, int r,
+            EmMatchInfo *info)
 {
-  int dx, dy, r;
-  double s = eg_match_core (a, b, &dx, &dy, &r);
   double *rimg, *pimg, tmap[EM_NB], tconf[EM_NB], pmap[EM_NB], pconf[EM_NB];
   uint8_t *rmask, *pmask;
   double th;
@@ -1089,6 +1098,15 @@ em_match_ex (const EmFrame *a, const EmFrame *b, EmMatchInfo *info)
   return s;
 }
 
+double
+em_match_ex (const EmFrame *a, const EmFrame *b, EmMatchInfo *info)
+{
+  int dx, dy, r;
+  double s = eg_match_core (a, b, &dx, &dy, &r);
+
+  return eg_fq_eval (a, b, s, dx, dy, r, info);
+}
+
 /* ---- decision (constants in em_check.h) ------------------------------- */
 double
 em_match (const EmFrame *a, const EmFrame *b)
@@ -1098,6 +1116,7 @@ em_match (const EmFrame *a, const EmFrame *b)
 #if EM_FQ_ENABLE
   {
     int dx, dy, r;
+
     s = eg_match_core (a, b, &dx, &dy, &r);
     /* Below EM_FQ_GATE_FROM the pair is rejected anyway, so the period maps
      * (~2 ms) are only computed for a pair that could be accepted. Scores
@@ -1105,8 +1124,8 @@ em_match (const EmFrame *a, const EmFrame *b)
      * distribution comparable to the ungated front-end. */
     if (s < EM_FQ_GATE_FROM)
       return s;
+    s = eg_fq_eval (a, b, s, dx, dy, r, &in);
   }
-  s = em_match_ex (a, b, &in);
   if (s > -1.0)
     {
       if (in.nblk < EM_FQ_MIN_NBLK || in.mad > EM_FQ_MAX_MAD

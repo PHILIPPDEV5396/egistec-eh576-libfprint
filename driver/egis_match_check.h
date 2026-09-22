@@ -40,8 +40,41 @@ typedef struct
 #ifndef EM_FQ_ENABLE
 #define EM_FQ_ENABLE 1
 #endif
+/* The window of ridge periods the block estimator can measure at all, in
+ * pixels of lag: a texture outside it has its blocks pinned against an edge
+ * or dropped, so nblk collapses however good the correlation is. */
+#ifndef EM_FQ_K0
+#define EM_FQ_K0 3.5
+#endif
+#ifndef EM_FQ_K1
+#define EM_FQ_K1 9.5
+#endif
+#define EM_FQ_NK ((int) ((EM_FQ_K1 - EM_FQ_K0) / 0.5 + 1.5))   /* 12 */
+
+/* What em_match returns for a pair the check REJECTS. Not the same event as
+ * "there was nothing to score": the pair was compared and found wanting. In
+ * your driver both are simply below the threshold, so this changes nothing
+ * there; in mine a negative means "could not judge this frame", which the
+ * driver answers with a retry that costs the presenter no attempt -- and an
+ * artefact that trips the check should not get unlimited free tries. Set it
+ * to -1.0 if you would rather keep the old value. */
+#ifndef EM_FQ_REJECT
+#define EM_FQ_REJECT 0.0
+#endif
+
+/* NOT a texture criterion, despite the name: nblk is arithmetically the
+ * number of blocks geometrically eligible over the overlap (r = 0.9996
+ * against the eligibility count), so this clause is an overlap gate. At 20
+ * it sat at ~1200-1400 px, above the matcher's own EG_MIN_OVERLAP of 800 and
+ * above the genuine 5th percentile of 12-14. Measured over six blind
+ * families: every value from 8 to 20 gives BIT-IDENTICAL attack numbers --
+ * it stops no synthetic pattern that another clause does not stop -- while
+ * 20 cost one genuine press of 60 in my session under my driver's
+ * two-consecutive-frame rule and three across sessions. Your own attribution
+ * on the 302-family (MIN_NBLK 42 of 302) is first-clause-wins: those pairs
+ * fail p_spread too. */
 #ifndef EM_FQ_MIN_NBLK
-#define EM_FQ_MIN_NBLK 20
+#define EM_FQ_MIN_NBLK 12
 #endif
 #ifndef EM_FQ_MAX_MAD
 #define EM_FQ_MAX_MAD 0.5
