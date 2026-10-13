@@ -161,8 +161,9 @@ person and fingers five days later (2026-09-18), measured with the kit of
 [the out-of-tree driver](https://github.com/PHILIPPDEV5396/libfprint-egis0576)
 and its revision of this front-end (same enhancement and NCC search plus
 checks that can only reject, accept point 0.78, flat-fielded frames, two
-consecutive frames over the threshold), give **13 of 60 false rejects and 18
-of 480 false accepts**, worst impostor 0.896, all 18 right thumb against
+consecutive frames over the threshold, the second corroborated on the
+un-flat-fielded bytes), give **13 of 60 false rejects and 18 of 480 false
+accepts**, worst impostor 0.896, all 18 right thumb against
 right index; the vendor matcher that driver also builds accepts none of the
 480 on the same frames. The cause is what the score measures: whether two
 patches agree in ridge flow — direction and spacing — not whose finger they

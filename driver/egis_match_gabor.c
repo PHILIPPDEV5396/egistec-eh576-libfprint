@@ -93,8 +93,8 @@
  * (0.75 on my flat-fielded unit, 0.81 on his); a third unit decides.
  * [Correction: "unit-dependent" undersold it. There is no gap to place a
  * threshold in on the second session of my unit, nor on the two units
- * reported to the out-of-tree driver since (sam-dant's, irvingpop's); "my
- * unit" above means one session.]
+ * whose Gabor scores were reported to the out-of-tree driver since
+ * (sam-dant's, irvingpop's); "my unit" above means one session.]
  *
  * SECOND SESSION, AND WHAT THE SCORE MEASURES (found 2026-09-26). The same
  * unit, person and fingers five days after the MEASURED session
@@ -105,10 +105,11 @@
  * and its revision of this file -- the same enhancement and NCC search, plus a
  * ridge-evidence gate and a ridge-period check that can only reject; accept
  * point 0.78; flat-fielded frames; that driver's rule of two consecutive
- * frames over the threshold. The cause is what the score measures: whether
- * two patches agree in ridge flow (direction and spacing), not whose skin
- * they are, so two different fingers that put near-parallel ridges at a
- * similar angle and period on the sensor score like one finger. On
+ * frames over the threshold, the second corroborated on the un-flat-fielded
+ * bytes. The cause is what the score measures: whether two patches agree
+ * in ridge flow (direction and spacing), not whose skin they are, so two
+ * different fingers that put near-parallel ridges at a similar angle and
+ * period on the sensor score like one finger. On
  * 2026-09-13 the thumb lay 42-48 deg from both index fingers, outside the
  * +-10 deg search; on 2026-09-18 its dominant ridge angle was 1.3 deg from
  * the right index finger's. Threshold, overlap floor (EG_MIN_OVERLAP) and
